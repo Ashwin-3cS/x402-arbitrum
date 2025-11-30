@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import { groq } from '@ai-sdk/groq';
+import { generateText } from 'ai';
 import { loadContractAddresses, ENV, ARBITRUM_SEPOLIA_CHAIN_ID } from '../../app/config';
 import { decodePaymentHeader, verifyTransferAuthorization } from '../../app/eip3009';
 import { SettlementService } from '../../app/settlement';
@@ -276,15 +278,23 @@ fastify.post('/chat', async (request, reply) => {
       }, 'Settlement executed successfully');
     }
 
-    // Mock AI Response
+    // ... inside the route handler ...
+
+    // Generate AI Response using Groq
     const body = request.body as any;
     const messages = body.messages || [];
-    const lastMessage = messages.length > 0 ? messages[messages.length - 1].content : 'Hello';
+
+    // Convert messages to Vercel AI SDK format if needed, or pass directly if compatible
+
+    const { text } = await generateText({
+      model: groq('llama-3.3-70b-versatile'),
+      messages: messages,
+    });
 
     const aiResponse = {
       role: 'assistant',
-      content: `[PAID RESPONSE] I received your message: "${lastMessage}". This is a mock AI response served after successful x402 payment verification.`,
-      model: 'mock-gpt-4',
+      content: text,
+      model: 'llama-3.3-70b-versatile',
     };
 
     // Add X-Payment-Response header to indicate successful payment processing
