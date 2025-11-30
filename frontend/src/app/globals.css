@@ -1,0 +1,237 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-background: #0A0A0C; /* Black with hint of blue */
+  --color-surface: #2A2A2A; /* Graphite */
+  --color-primary: #9BF2D5; /* Cold Mint */
+  --color-accent: #2A2A2A; /* Graphite */
+  
+  /* Fonts */
+  --font-sans: 'Space Grotesk', var(--font-space-grotesk), sans-serif;
+  --font-mono: 'Fira Code', var(--font-geist-mono), monospace;
+  
+  /* Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+:root {
+  --background: #0A0A0C;
+  --foreground: #f8fafc;
+}
+
+body {
+  background-color: #0A0A0C;
+  color: #f8fafc;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Glass morphism effects */
+.glass {
+  background: rgba(42, 42, 42, 0.6); /* Graphite with opacity */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(155, 242, 213, 0.2); /* Mint border */
+}
+
+.glass-hover:hover {
+  background: rgba(42, 42, 42, 0.8); /* Graphite */
+  border-color: rgba(155, 242, 213, 0.4); /* Mint border on hover */
+  box-shadow: 0 0 20px rgba(155, 242, 213, 0.15);
+  transform: translateY(-4px);
+  transition: all 0.3s ease;
+}
+
+/* Grid background with blurred lines */
+.grid-bg {
+  position: relative;
+}
+
+.grid-bg::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(to right, rgba(42, 42, 42, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 42, 42, 0.3) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  filter: blur(0.5px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0C;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A2A;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(155, 242, 213, 0.3);
+}
+
+/* Animation utilities */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Animated Grid Streaks */
+.animated-grid-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.grid-streak {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.grid-streak.vertical {
+  width: 1.5px;
+  height: var(--length);
+  left: var(--x);
+  top: var(--y);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(200, 201, 207, 0.3) 20%,
+    #C8C9CF 50%,
+    rgba(200, 201, 207, 0.3) 80%,
+    transparent 100%
+  );
+}
+
+.grid-streak.horizontal {
+  width: var(--length);
+  height: 2.5px;
+  left: var(--x);
+  top: var(--y);
+  opacity: 0.7;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(200, 201, 207, 0.4) 15%,
+    #C8C9CF 50%,
+    rgba(200, 201, 207, 0.4) 85%,
+    transparent 100%
+  );
+}
+
+/* Vertical animations */
+.grid-streak.vertical.down {
+  animation: moveVerticalDown var(--duration) linear var(--delay) infinite;
+}
+
+.grid-streak.vertical.up {
+  animation: moveVerticalUp var(--duration) linear var(--delay) infinite;
+}
+
+/* Horizontal animations */
+.grid-streak.horizontal.right {
+  animation: moveHorizontalRight var(--duration) linear var(--delay) infinite;
+}
+
+.grid-streak.horizontal.left {
+  animation: moveHorizontalLeft var(--duration) linear var(--delay) infinite;
+}
+
+@keyframes moveVerticalDown {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  3% {
+    opacity: 0.5;
+  }
+  97% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(calc(100vh + var(--length)));
+    opacity: 0;
+  }
+}
+
+@keyframes moveVerticalUp {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  3% {
+    opacity: 0.5;
+  }
+  97% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(calc(-100vh - var(--length)));
+    opacity: 0;
+  }
+}
+
+@keyframes moveHorizontalRight {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  3% {
+    opacity: 0.7;
+  }
+  97% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(calc(100vw + var(--length)));
+    opacity: 0;
+  }
+}
+
+@keyframes moveHorizontalLeft {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  3% {
+    opacity: 0.7;
+  }
+  97% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(calc(-100vw - var(--length)));
+    opacity: 0;
+  }
+}
