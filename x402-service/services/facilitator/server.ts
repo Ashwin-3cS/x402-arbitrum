@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import express, { Request, Response } from "express";
-import { X402Facilitator } from "../quote-service/facilitator";
+import { X402Facilitator } from "../ai-service/facilitator";
 import { createWalletClient, http, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { arbitrumSepolia } from 'viem/chains';
@@ -127,12 +127,12 @@ app.post("/verify", async (req: Request, res: Response) => {
     console.log('[Facilitator] Verifying payment...');
     console.log('[Facilitator] Payment requirements:', paymentRequirements);
     console.log('[Facilitator] Payment payload:', paymentPayload);
-    
+
     const verificationResult = {
       valid: true,
       message: 'Payment payload is valid',
     };
-    
+
     res.json(verificationResult);
   } catch (error) {
     console.error("error", error);
@@ -172,7 +172,7 @@ app.post("/settle", async (req: Request, res: Response) => {
   try {
     console.log('[Facilitator] Received settle request');
     console.log('[Facilitator] Body:', JSON.stringify(req.body, null, 2));
-    
+
     const body: SettleRequest = req.body;
     const paymentRequirements = body.paymentRequirements;
     const paymentPayload = body.paymentPayload;
@@ -187,38 +187,38 @@ app.post("/settle", async (req: Request, res: Response) => {
 
     // Security validations: validate all critical parameters against configured values
     const merchantAddress = account.address;
-    
+
     // Normalize addresses for comparison (lowercase)
     const requestedToken = paymentRequirements.token.toLowerCase();
     const configuredToken = USDC_ADDRESS.toLowerCase();
     const requestedRecipient = paymentPayload.payload.to.toLowerCase();
     const configuredRecipient = merchantAddress.toLowerCase();
-    
+
     // Validate token: must match configured USDC address
     if (requestedToken !== configuredToken) {
       console.error(`[Facilitator] Token mismatch - requested: ${requestedToken}, configured: ${configuredToken}`);
       throw new Error(`Invalid token address. Only ${USDC_ADDRESS} is supported.`);
     }
-    
+
     // Validate recipient: must match configured merchant address
     if (requestedRecipient !== configuredRecipient) {
       console.error(`[Facilitator] Recipient mismatch - requested: ${requestedRecipient}, configured: ${configuredRecipient}`);
       throw new Error(`Invalid recipient address. Payments must go to ${merchantAddress}`);
     }
-    
+
     // Validate amounts match between requirements and payload
     if (paymentRequirements.amount !== paymentPayload.payload.value) {
       console.error(`[Facilitator] Amount mismatch - requirements: ${paymentRequirements.amount}, payload: ${paymentPayload.payload.value}`);
       throw new Error('Amount mismatch between payment requirements and payload');
     }
-    
+
     // Validate amount is a positive integer
     const amount = BigInt(paymentRequirements.amount);
     if (amount <= 0n) {
       console.error(`[Facilitator] Invalid amount: ${amount}`);
       throw new Error('Amount must be a positive integer');
     }
-    
+
     // Optional: add maximum amount limit (e.g., 1000 USDC = 1000000000 micro-USDC)
     const MAX_AMOUNT = BigInt(1_000_000_000); // 1000 USDC in 6 decimals
     if (amount > MAX_AMOUNT) {
@@ -235,7 +235,7 @@ app.post("/settle", async (req: Request, res: Response) => {
     console.log('[Facilitator] To:', merchantAddress, '(validated)');
     console.log('[Facilitator] Amount:', amount.toString(), '(validated)');
     console.log('[Facilitator] Token:', USDC_ADDRESS, '(validated)');
-    
+
     // ERC-20 transferFrom ABI
     const transferFromAbi = [{
       name: 'transferFrom',
@@ -248,7 +248,7 @@ app.post("/settle", async (req: Request, res: Response) => {
       ],
       outputs: [{ name: '', type: 'bool' }],
     }] as const;
-    
+
     // Execute the transfer using ONLY validated/configured values
     const hash = await client.writeContract({
       address: USDC_ADDRESS as `0x${string}`, // Use configured USDC, not request value
@@ -260,21 +260,21 @@ app.post("/settle", async (req: Request, res: Response) => {
         amount, // Use validated amount
       ],
     });
-    
+
     console.log('[Facilitator] Transaction submitted:', hash);
-    
+
     // Wait for confirmation
     const receipt = await client.waitForTransactionReceipt({ hash });
-    
+
     console.log('[Facilitator] Transaction confirmed in block:', receipt.blockNumber);
-    
+
     const settlementResult = {
       success: true,
       transactionHash: receipt.transactionHash,
       blockNumber: Number(receipt.blockNumber),
       status: 'confirmed' as const,
     };
-    
+
     console.log('[Facilitator] Settlement result:', settlementResult);
     res.json(settlementResult);
   } catch (error) {

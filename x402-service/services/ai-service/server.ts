@@ -1,10 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { parseUnits } from 'viem';
-import { PaymentSwapQuoteIntentSchema, PaymentSwapQuoteAttestation, QuoteStruct } from '../../app/types';
-import { QuoteSigner } from './signer';
 import { loadContractAddresses, ENV, ARBITRUM_SEPOLIA_CHAIN_ID } from '../../app/config';
-import { X402Facilitator } from './facilitator';
 import { decodePaymentHeader, verifyTransferAuthorization } from '../../app/eip3009';
 import { SettlementService } from '../../app/settlement';
 
@@ -17,21 +13,23 @@ fastify.register(cors as any, {
   exposedHeaders: ['X-Payment-Response'],
 });
 
-// Initialize signer, settlement service, and load addresses
-const signer = new QuoteSigner();
+// Initialize settlement service and load addresses
 const addresses = loadContractAddresses();
+// Use the quote service private key for settlement/signing for now
 const settlementService = ENV.ENABLE_SETTLEMENT ? new SettlementService(ENV.QUOTE_SERVICE_PRIVATE_KEY) : null;
+// We'll use the settlement service address (derived from private key) as the payee
+const payeeAddress = settlementService ? settlementService.getAddress() : '0xbb7462adA69561Ff596322A2f9595c28E47FD6aa'; // Fallback to hardcoded if settlement disabled
 
 fastify.get('/health', async (request, reply) => {
-  return { status: 'ok', signer: signer.getAddress() };
+  return { status: 'ok', service: 'x402-ai-service' };
 });
 
-// x402 quote endpoint
-fastify.post('/quote', async (request, reply) => {
+// x402 chat endpoint
+fastify.post('/chat', async (request, reply) => {
   try {
     // Check for X-Payment header (x402 payment proof)
     const paymentHeader = request.headers['x-payment'] as string;
-    
+
     if (!paymentHeader) {
       // Return HTTP 402 Payment Required with x402-compliant payment details
       reply.status(402);
@@ -43,11 +41,11 @@ fastify.post('/quote', async (request, reply) => {
             scheme: 'exact',
             network: 'arbitrum-sepolia',
             maxAmountRequired: '1000', // 0.001 USDC
-            resource: '/quote',
-            description: 'Payment for swap quote generation',
+            resource: '/chat',
+            description: 'Payment for AI chat response',
             mimeType: 'application/json',
             outputSchema: null,
-            payTo: signer.getAddress(),
+            payTo: payeeAddress,
             maxTimeoutSeconds: 300,
             asset: addresses.usdc, // Token contract address as string
             extra: {
@@ -62,7 +60,7 @@ fastify.post('/quote', async (request, reply) => {
       };
     }
 
-    fastify.log.info('Processing paid quote request with payment proof...');
+    fastify.log.info('Processing paid chat request with payment proof...');
 
     // Decode and verify payment
     const paymentPayload = decodePaymentHeader(paymentHeader);
@@ -75,11 +73,11 @@ fastify.post('/quote', async (request, reply) => {
           scheme: 'exact',
           network: 'arbitrum-sepolia',
           maxAmountRequired: '1000',
-          resource: '/quote',
-          description: 'Payment for swap quote generation',
+          resource: '/chat',
+          description: 'Payment for AI chat response',
           mimeType: 'application/json',
           outputSchema: null,
-          payTo: signer.getAddress(),
+          payTo: payeeAddress,
           maxTimeoutSeconds: 300,
           asset: addresses.usdc,
           extra: { name: 'TestUSDC', version: '1' },
@@ -97,11 +95,11 @@ fastify.post('/quote', async (request, reply) => {
           scheme: 'exact',
           network: 'arbitrum-sepolia',
           maxAmountRequired: '1000',
-          resource: '/quote',
-          description: 'Payment for swap quote generation',
+          resource: '/chat',
+          description: 'Payment for AI chat response',
           mimeType: 'application/json',
           outputSchema: null,
-          payTo: signer.getAddress(),
+          payTo: payeeAddress,
           maxTimeoutSeconds: 300,
           asset: addresses.usdc,
           extra: { name: 'TestUSDC', version: '1' },
@@ -121,11 +119,11 @@ fastify.post('/quote', async (request, reply) => {
           scheme: 'exact',
           network: 'arbitrum-sepolia',
           maxAmountRequired: '1000',
-          resource: '/quote',
-          description: 'Payment for swap quote generation',
+          resource: '/chat',
+          description: 'Payment for AI chat response',
           mimeType: 'application/json',
           outputSchema: null,
-          payTo: signer.getAddress(),
+          payTo: payeeAddress,
           maxTimeoutSeconds: 300,
           asset: addresses.usdc,
           extra: { name: 'TestUSDC', version: '1' },
@@ -134,7 +132,7 @@ fastify.post('/quote', async (request, reply) => {
     }
 
     // Verify payment recipient
-    if (paymentPayload.payload.to.toLowerCase() !== signer.getAddress().toLowerCase()) {
+    if (paymentPayload.payload.to.toLowerCase() !== payeeAddress.toLowerCase()) {
       reply.status(402);
       return {
         x402Version: 1,
@@ -143,11 +141,11 @@ fastify.post('/quote', async (request, reply) => {
           scheme: 'exact',
           network: 'arbitrum-sepolia',
           maxAmountRequired: '1000',
-          resource: '/quote',
-          description: 'Payment for swap quote generation',
+          resource: '/chat',
+          description: 'Payment for AI chat response',
           mimeType: 'application/json',
           outputSchema: null,
-          payTo: signer.getAddress(),
+          payTo: payeeAddress,
           maxTimeoutSeconds: 300,
           asset: addresses.usdc,
           extra: { name: 'TestUSDC', version: '1' },
@@ -199,11 +197,11 @@ fastify.post('/quote', async (request, reply) => {
           scheme: 'exact',
           network: 'arbitrum-sepolia',
           maxAmountRequired: '1000',
-          resource: '/quote',
-          description: 'Payment for swap quote generation',
+          resource: '/chat',
+          description: 'Payment for AI chat response',
           mimeType: 'application/json',
           outputSchema: null,
-          payTo: signer.getAddress(),
+          payTo: payeeAddress,
           maxTimeoutSeconds: 300,
           asset: addresses.usdc,
           extra: { name: 'TestUSDC', version: '1' },
@@ -222,11 +220,11 @@ fastify.post('/quote', async (request, reply) => {
           scheme: 'exact',
           network: 'arbitrum-sepolia',
           maxAmountRequired: '1000',
-          resource: '/quote',
-          description: 'Payment for swap quote generation',
+          resource: '/chat',
+          description: 'Payment for AI chat response',
           mimeType: 'application/json',
           outputSchema: null,
-          payTo: signer.getAddress(),
+          payTo: payeeAddress,
           maxTimeoutSeconds: 300,
           asset: addresses.usdc,
           extra: { name: 'TestUSDC', version: '1' },
@@ -259,11 +257,11 @@ fastify.post('/quote', async (request, reply) => {
             scheme: 'exact',
             network: 'arbitrum-sepolia',
             maxAmountRequired: '1000',
-            resource: '/quote',
-            description: 'Payment for swap quote generation',
+            resource: '/chat',
+            description: 'Payment for AI chat response',
             mimeType: 'application/json',
             outputSchema: null,
-            payTo: signer.getAddress(),
+            payTo: payeeAddress,
             maxTimeoutSeconds: 300,
             asset: addresses.usdc,
             extra: { name: 'TestUSDC', version: '1' },
@@ -278,69 +276,16 @@ fastify.post('/quote', async (request, reply) => {
       }, 'Settlement executed successfully');
     }
 
-    // Validate request body
-    const intent = PaymentSwapQuoteIntentSchema.parse(request.body);
-    
-    // Calculate expected output based on mock rate
-    const sellAmount = BigInt(intent.sellAmount);
-    const expectedOut = (sellAmount * BigInt(ENV.MOCK_RATE_NUMERATOR)) / BigInt(ENV.MOCK_RATE_DENOMINATOR);
-    
-    // Apply slippage to get minimum buy amount
-    const slippageFactor = BigInt(10000 - intent.maxSlippageBps);
-    const minBuy = (expectedOut * slippageFactor) / BigInt(10000);
-    
-    // Create quote struct for EIP-712 signing
-    const quote: QuoteStruct = {
-      from: intent.from as `0x${string}`,
-      sell: intent.sell as `0x${string}`,
-      buy: intent.buy as `0x${string}`,
-      sellAmount,
-      minBuy,
-      deadline: BigInt(intent.deadline),
-      chainId: BigInt(intent.chainId),
-      nonce: intent.nonce as `0x${string}`,
+    // Mock AI Response
+    const body = request.body as any;
+    const messages = body.messages || [];
+    const lastMessage = messages.length > 0 ? messages[messages.length - 1].content : 'Hello';
+
+    const aiResponse = {
+      role: 'assistant',
+      content: `[PAID RESPONSE] I received your message: "${lastMessage}". This is a mock AI response served after successful x402 payment verification.`,
+      model: 'mock-gpt-4',
     };
-    
-    // Sign the quote
-    const { signature: quoteSignature, signer: signerAddress } = await signer.signQuote(quote, addresses.executor);
-    
-    // Compute intent hash
-    const intentHash = signer.computeIntentHash(intent);
-    
-    // Build attestation response
-    const attestation: PaymentSwapQuoteAttestation = {
-      type: 'payment.swap.quote.attestation',
-      route: {
-        venues: ['mock:adapter'],
-        expected_out: expectedOut.toString(),
-        ttl: 300,
-      },
-      constraints: {
-        max_fee_bps: 15,
-      },
-      signature: quoteSignature,
-      signer: signerAddress,
-      intent_hash: intentHash,
-      quote: {
-        from: quote.from,
-        sell: quote.sell,
-        buy: quote.buy,
-        sellAmount: quote.sellAmount.toString(),
-        minBuy: quote.minBuy.toString(),
-        deadline: Number(quote.deadline),
-        chainId: Number(quote.chainId),
-        nonce: quote.nonce,
-      },
-    };
-    
-    fastify.log.info({
-      intent_hash: intentHash,
-      sell_amount: sellAmount.toString(),
-      expected_out: expectedOut.toString(),
-      min_buy: minBuy.toString(),
-      slippage_bps: intent.maxSlippageBps,
-      payment_received: true,
-    }, 'Generated paid quote');
 
     // Add X-Payment-Response header to indicate successful payment processing
     const paymentResponse = {
@@ -352,13 +297,14 @@ fastify.post('/quote', async (request, reply) => {
       token: addresses.usdc,
       settled: !!settlementResult?.success,
     };
-    
+
     reply.header('X-Payment-Response', Buffer.from(JSON.stringify(paymentResponse)).toString('base64'));
-    
-    return attestation;
+
+    return aiResponse;
+
   } catch (error) {
-    fastify.log.error(error, 'Quote generation failed');
-    
+    fastify.log.error(error, 'Chat request failed');
+
     if (error instanceof Error) {
       reply.status(400).send({ error: error.message });
     } else {
@@ -371,15 +317,11 @@ fastify.post('/quote', async (request, reply) => {
 const start = async () => {
   try {
     await fastify.listen({ port: 3001, host: '0.0.0.0' });
-    console.log('x402-compliant Quote service running on http://localhost:3001');
+    console.log('x402-compliant AI service running on http://localhost:3001');
     console.log('Accepts payments via x402 protocol');
-    console.log('Signer address:', signer.getAddress());
-    console.log('Executor address:', addresses.executor);
-    console.log('Payment: 0.001 USDC per quote');
+    console.log('Payee address:', payeeAddress);
+    console.log('Payment: 0.001 USDC per chat request');
     console.log('Settlement:', ENV.ENABLE_SETTLEMENT ? 'ENABLED (on-chain)' : 'DISABLED (verification only)');
-    if (settlementService) {
-      console.log('Settlement facilitator:', settlementService.getAddress());
-    }
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

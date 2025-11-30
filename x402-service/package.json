@@ -7,7 +7,7 @@
   "description": "x402 Arbitrum Sepolia demo with quote service and onchain swap executor",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev:service": "tsx services/quote-service/server.ts",
+    "dev:service": "tsx services/ai-service/server.ts",
     "dev:facilitator": "tsx services/facilitator/server.ts",
     "pay": "tsx app/cli.ts",
     "install-x402": "npm install x402-fetch @coinbase/x402",
