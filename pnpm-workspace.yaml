@@ -1,0 +1,4 @@
+packages:
+  - 'x402-service'
+  - 'ap2-service'
+  - 'ap2-service/frontend'
