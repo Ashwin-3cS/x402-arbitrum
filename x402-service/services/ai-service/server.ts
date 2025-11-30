@@ -26,14 +26,42 @@ fastify.get('/health', async (request, reply) => {
   return { status: 'ok', service: 'x402-ai-service' };
 });
 
+// Helper to estimate token count (approx 1.3 tokens per word)
+function estimateTokenCount(text: string): number {
+  if (!text) return 0;
+  const wordCount = text.trim().split(/\s+/).length;
+  return Math.ceil(wordCount * 1.3);
+}
+
+// Pricing constants (in atomic units, e.g., wei/smallest unit of USDC)
+// 1 USDC = 1,000,000 units
+// Price: 0.000001 USDC per token = 1 unit per token
+const PRICE_PER_TOKEN = BigInt(1);
+const MAX_OUTPUT_TOKENS = 500; // Buffer for output
+
 // x402 chat endpoint
 fastify.post('/chat', async (request, reply) => {
   try {
+    // Parse request body to estimate cost
+    const body = request.body as any;
+    const messages = body.messages || [];
+
+    // Calculate input tokens from all messages
+    let inputTokens = 0;
+    for (const msg of messages) {
+      inputTokens += estimateTokenCount(msg.content || '');
+    }
+
+    // Calculate total estimated cost
+    // Total Tokens = Input Tokens + Max Output Buffer
+    const totalEstimatedTokens = BigInt(inputTokens + MAX_OUTPUT_TOKENS);
+    const requiredAmount = totalEstimatedTokens * PRICE_PER_TOKEN;
+
     // Check for X-Payment header (x402 payment proof)
     const paymentHeader = request.headers['x-payment'] as string;
 
     if (!paymentHeader) {
-      // Return HTTP 402 Payment Required with x402-compliant payment details
+      // Return HTTP 402 Payment Required with calculated amount
       reply.status(402);
       return {
         x402Version: 1,
@@ -42,14 +70,14 @@ fastify.post('/chat', async (request, reply) => {
           {
             scheme: 'exact',
             network: 'arbitrum-sepolia',
-            maxAmountRequired: '1000', // 0.001 USDC
+            maxAmountRequired: requiredAmount.toString(),
             resource: '/chat',
-            description: 'Payment for AI chat response',
+            description: `Payment for AI chat (${inputTokens} input + ${MAX_OUTPUT_TOKENS} max output tokens)`,
             mimeType: 'application/json',
             outputSchema: null,
             payTo: payeeAddress,
             maxTimeoutSeconds: 300,
-            asset: addresses.usdc, // Token contract address as string
+            asset: addresses.usdc,
             extra: {
               name: 'TestUSDC',
               version: '1',
@@ -62,7 +90,7 @@ fastify.post('/chat', async (request, reply) => {
       };
     }
 
-    fastify.log.info('Processing paid chat request with payment proof...');
+    fastify.log.info(`Processing paid chat request. Estimated tokens: ${totalEstimatedTokens}, Required: ${requiredAmount}`);
 
     // Decode and verify payment
     const paymentPayload = decodePaymentHeader(paymentHeader);
@@ -74,7 +102,7 @@ fastify.post('/chat', async (request, reply) => {
         accepts: [{
           scheme: 'exact',
           network: 'arbitrum-sepolia',
-          maxAmountRequired: '1000',
+          maxAmountRequired: requiredAmount.toString(),
           resource: '/chat',
           description: 'Payment for AI chat response',
           mimeType: 'application/json',
@@ -96,7 +124,7 @@ fastify.post('/chat', async (request, reply) => {
         accepts: [{
           scheme: 'exact',
           network: 'arbitrum-sepolia',
-          maxAmountRequired: '1000',
+          maxAmountRequired: requiredAmount.toString(),
           resource: '/chat',
           description: 'Payment for AI chat response',
           mimeType: 'application/json',
@@ -111,7 +139,6 @@ fastify.post('/chat', async (request, reply) => {
 
     // Verify payment amount
     const paymentAmount = BigInt(paymentPayload.payload.value);
-    const requiredAmount = BigInt('1000');
     if (paymentAmount < requiredAmount) {
       reply.status(402);
       return {
@@ -120,7 +147,7 @@ fastify.post('/chat', async (request, reply) => {
         accepts: [{
           scheme: 'exact',
           network: 'arbitrum-sepolia',
-          maxAmountRequired: '1000',
+          maxAmountRequired: requiredAmount.toString(),
           resource: '/chat',
           description: 'Payment for AI chat response',
           mimeType: 'application/json',
@@ -281,8 +308,7 @@ fastify.post('/chat', async (request, reply) => {
     // ... inside the route handler ...
 
     // Generate AI Response using Groq
-    const body = request.body as any;
-    const messages = body.messages || [];
+    // body and messages are already parsed at the top of the handler
 
     // Convert messages to Vercel AI SDK format if needed, or pass directly if compatible
 
