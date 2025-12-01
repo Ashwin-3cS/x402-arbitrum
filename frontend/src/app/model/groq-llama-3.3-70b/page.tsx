@@ -3,11 +3,16 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import GlassCard from '../../../components/GlassCard';
-import { X402Client, ChatMessage } from '../../../lib/x402-client';
+import { X402Client, ChatMessage } from '../../../lib/x402-client-wagmi';
 
 const GroqModelPage: React.FC = () => {
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<string>('');
@@ -16,7 +21,7 @@ const GroqModelPage: React.FC = () => {
   const [txHash, setTxHash] = useState<string | null>(null);
 
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !isConnected) return;
 
     const userMessage: ChatMessage = { role: 'user', content: input };
     setLoading(true);
@@ -25,7 +30,6 @@ const GroqModelPage: React.FC = () => {
     setHeaders(null);
     setTxHash(null);
 
-    // Build cURL command for display
     const curlCmd = `curl -X POST http://localhost:3001/chat \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -39,7 +43,7 @@ const GroqModelPage: React.FC = () => {
 
       setResponse(result.response.content);
       setHeaders(result.logs);
-      
+
       if (result.response.paymentResponse?.transactionHash) {
         setTxHash(result.response.paymentResponse.transactionHash);
       }
@@ -61,11 +65,51 @@ const GroqModelPage: React.FC = () => {
         Back to Marketplace
       </button>
 
-      <h1 className="text-3xl font-bold text-white mb-2">Llama 3.3 70B</h1>
-      <p className="text-gray-400 mb-8">Groq x402 Integration</p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Llama 3.3 70B</h1>
+          <p className="text-gray-400">Groq x402 Integration</p>
+        </div>
+
+        {!isConnected ? (
+          <div className="flex gap-2">
+            {connectors
+              .filter((connector) => connector.name === 'MetaMask')
+              .map((connector) => (
+                <button
+                  key={connector.uid}
+                  onClick={() => connect({ connector })}
+                  className="px-4 py-2 bg-[#9BF2D5] text-black rounded-lg font-medium hover:bg-[#9BF2D5]/90 transition-colors"
+                >
+                  Connect {connector.name}
+                </button>
+              ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <div className="text-sm">
+              <p className="text-gray-400">Connected</p>
+              <p className="text-white font-mono">{address?.substring(0, 6)}...{address?.substring(address.length - 4)}</p>
+            </div>
+            <button
+              onClick={() => disconnect()}
+              className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg font-medium hover:bg-red-500/30 transition-colors"
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
+      </div>
+
+      {!isConnected && (
+        <div className="mb-8 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          <p className="text-yellow-400 text-sm">
+            Please connect your wallet to use this service. Make sure you're on Arbitrum Sepolia network.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Live Playground */}
         <GlassCard>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -78,7 +122,7 @@ const GroqModelPage: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Enter a prompt to test this model..."
-            disabled={loading}
+            disabled={loading || !isConnected}
             className="w-full h-32 px-4 py-3 bg-[#1A1A1A] border border-[#9BF2D5]/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#9BF2D5]/50 resize-none mb-4 disabled:opacity-50"
           />
 
@@ -86,7 +130,7 @@ const GroqModelPage: React.FC = () => {
             <span className="text-xs text-gray-500">Uses credits from your connected wallet (Simulated)</span>
             <button
               onClick={handleSend}
-              disabled={loading || !input.trim()}
+              disabled={loading || !input.trim() || !isConnected}
               className="px-6 py-2 bg-[#9BF2D5] text-black rounded-lg font-medium hover:bg-[#9BF2D5]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {loading ? (
@@ -111,7 +155,6 @@ const GroqModelPage: React.FC = () => {
           )}
         </GlassCard>
 
-        {/* Right: Integration */}
         <div className="space-y-4">
           <GlassCard>
             <div className="flex items-center gap-2 mb-4">
@@ -133,7 +176,7 @@ const GroqModelPage: React.FC = () => {
                   <span className="ml-2 text-xs text-gray-500">BASH</span>
                 </div>
                 <pre className="text-xs text-gray-300 overflow-x-auto">
-{curlCommand || `curl -X POST http://localhost:3001/chat \\
+                  {curlCommand || `curl -X POST http://localhost:3001/chat \\
   -H "Content-Type: application/json" \\
   -d '{
     "messages": [{"role": "user", "content": "..."}]

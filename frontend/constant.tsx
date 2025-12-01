@@ -58,6 +58,17 @@ export const MOCK_MODELS: Model[] = [
     contextWindow: 'N/A',
     endpoint: 'https://api.arb402.com/v1/stability/sd3'
   },
+  {
+    id: 'groq-llama-3.3-70b',
+    name: 'Llama 3.3 70B',
+    provider: 'Groq (x402)',
+    description: 'Ultra-fast LLM inference with pay-per-token pricing via x402 protocol.',
+    pricePer1kTokens: 0.001,
+    latencyMs: 120,
+    tags: ['Text', 'x402', 'Instant'],
+    contextWindow: '128k',
+    endpoint: 'http://localhost:3001/chat'
+  },
 ];
 
 export const MOCK_USAGE_HISTORY: UsageRecord[] = Array.from({ length: 15 }).map((_, i) => ({

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import { Providers } from "../components/Providers";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -36,11 +37,12 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} antialiased min-h-screen bg-background text-white font-sans grid-bg selection:bg-[#9BF2D5]/30 selection:text-[#2A2A2A]`}
       >
-        <div className="relative z-10">
-          <Navbar />
-          {children}
-         
-        </div>
+        <Providers>
+          <div className="relative z-10">
+            <Navbar />
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );
