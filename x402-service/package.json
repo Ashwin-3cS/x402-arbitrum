@@ -1,10 +1,10 @@
 {
   "name": "x402-service",
-  "author": "Ben Greenberg <ben@arbitrum.foundation>",
+  "author": "arb402 team",
   "license": "MIT",
   "version": "1.0.0",
   "private": true,
-  "description": "x402 Arbitrum Sepolia demo with quote service and onchain swap executor",
+  "description": "arb402 initial mvp",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev:service": "tsx services/ai-service/server.ts",
