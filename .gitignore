@@ -21,6 +21,7 @@ Thumbs.db
 
 # Foundry
 lib/
+!frontend/src/lib/
 broadcast/
 cache_forge/
 
@@ -38,3 +39,7 @@ pids
 
 # Misc
 deployed-addresses.json
+
+
+
+frontend/.next/dev
