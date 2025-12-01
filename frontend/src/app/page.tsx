@@ -19,17 +19,22 @@ const Home: React.FC = () => {
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center z-10">
         <div className="inline-flex items-center px-3 py-1 rounded-full border border-[#9BF2D5]/30 bg-[#9BF2D5]/10 text-[#9BF2D5] text-sm mb-8 animate-pulse-slow">
           <span className="w-2 h-2 rounded-full bg-[#9BF2D5] mr-2"></span>
-          Integrating x402 payments
+          Powered by x402 Payment Protocol
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
-          The <span className="text-[#9BF2D5]">Decentralized</span><br />
-          API Marketplace
+          AI Services<br />
+          <span className="text-[#9BF2D5]">Without the Barriers</span>
         </h1>
         
-        <p className="text-xl text-gray-400 max-w-2xl mb-10 leading-relaxed">
-          Access top LLM endpoints instantly. Pay per token in stablecoins on Arbitrum. 
-          No API keys to manage. No monthly subscriptions.
+        <p className="text-xl text-gray-400 max-w-3xl mb-6 leading-relaxed">
+          Tired of API keys, subscriptions, and opaque pricing? Experience pay-per-use AI inference 
+          with <span className="text-[#9BF2D5]">gasless payments</span>, transparent token-based pricing, 
+          and wallet-based authentication. No credentials to manage. No monthly fees.
+        </p>
+        
+        <p className="text-lg text-gray-500 max-w-2xl mb-10 leading-relaxed">
+          Built on Arbitrum Sepolia with EIP-3009 signatures. Pay only for what you use.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -47,6 +52,7 @@ const Home: React.FC = () => {
           </a>
         </div>
       </section>
+
 
       {/* Features */}
       <section className="py-20 relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
